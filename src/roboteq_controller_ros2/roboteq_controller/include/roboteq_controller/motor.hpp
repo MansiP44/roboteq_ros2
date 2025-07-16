@@ -12,8 +12,8 @@
 
 #include "hardware_interface/system_interface.hpp"
 
-#include "roboteq_interfaces/msg/motor_status.hpp"
-#include "roboteq_interfaces/msg/control_status.hpp"
+//#include "roboteq_interfaces/msg/motor_status.hpp"
+//#include "roboteq_interfaces/msg/control_status.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "urdf_parser/urdf_parser.h"
 #include <filesystem>
@@ -56,20 +56,10 @@ public:
      */
     void initializeMotor(bool load_from_board, std::map<std::string, std::any>& roboteq_params);
     /**
-     * @brief run Run the diagnostic updater
-     * @param stat the stat will be updated
-     */
-    //void run(diagnostic_updater::DiagnosticStatusWrapper &stat);
-    /**
      * @brief setupLimits setup the maximum velocity, positio and effort
      * @param model the robot model
      */
     void setupLimits(urdf::Model model);
-    /**
-     * @brief resetPosition Reset the motor in a new initial position
-     * @param position the new position
-     */
-    //void resetPosition(double position);
     /**
      * @brief writeCommandsToHardware Write a command to the hardware interface
      * @param period the period update
@@ -154,9 +144,6 @@ protected:
   double from_encoder_ticks(double x);
    
 private:
-    //Initialization object
-    //NameSpace for bridge controller
-    //ros::NodeHandle mNh;
     // Name of the motor
     string mMotorName;
     // Serial controller communication
@@ -178,26 +165,12 @@ private:
     rclcpp::Logger logger_ = rclcpp::get_logger("ros2_control_node");
     
 
-    /// ROS joint limits interface
-    //joint_limits_interface::VelocityJointSoftLimitsInterface vel_limits_interface;
-
-    // Publisher diagnostic information
-    //ros::Publisher pub_status, pub_control;
-    // Message
-    roboteq_interfaces::msg::MotorStatus msg_status;
-    roboteq_interfaces::msg::ControlStatus msg_control;
-
     MotorParamConfigurator* parameter;
     MotorPIDConfigurator* pid_velocity;
     MotorPIDConfigurator* pid_torque;
     MotorPIDConfigurator* pid_position;
 
     GPIOSensor* _sensor;
-
-    // Reader motor message
-    //void read(string data);
-
-    //void connectionCallback(const ros::SingleSubscriberPublisher& pub);
 };
 
 }

@@ -60,17 +60,6 @@ void GPIOEncoderConfigurator::initConfigurator(bool load_from_board, std::map<st
         getEncoderFromRoboteq(roboteq_params);
     }
 
-    // Initialize encoder dynamic reconfigure
-    // mDynRecServer = std::make_shared<ReconfigureServer>(mDynServerMutex, ros::NodeHandle(mName));
-    // // Load default configuration
-    // roboteq_control::RoboteqEncoderConfig config;
-    // mDynRecServer->getConfigDefault(config);
-    // // Update parameters
-    // mDynServerMutex.lock();
-    // mDynRecServer->updateConfig(config);
-    // mDynServerMutex.unlock();
-    // // Set callback
-    // mDynRecServer->setCallback(boost::bind(&GPIOEncoderConfigurator::reconfigureCBEncoder, this, _1, _2));
 }
 
 double GPIOEncoderConfigurator::getConversion(double reduction, std::map<std::string, std::any>& roboteq_params) {
@@ -165,88 +154,3 @@ void GPIOEncoderConfigurator::getEncoderFromRoboteq(std::map<std::string, std::a
         RCLCPP_WARN(logger_, "Failure parsing feedback data. Dropping message.%s", e.what());
     }
 }
-
-// void GPIOEncoderConfigurator::reconfigureCBEncoder(roboteq_control::RoboteqEncoderConfig &config, uint32_t level) {
-
-//     //The first time we're called, we just want to make sure we have the
-//     //original configuration
-//     if(!setup_encoder)
-//     {
-//       _last_encoder_config = config;
-//       default_encoder_config = _last_encoder_config;
-//       setup_encoder = true;
-//       return;
-//     }
-
-//     if(config.restore_defaults)
-//     {
-//         //if someone sets restore defaults on the parameter server, prevent looping
-//         config.restore_defaults = false;
-//         // Overload default configuration
-//         config = default_encoder_config;
-//     }
-
-//     if(config.load_roboteq)
-//     {
-//         ROS_INFO_STREAM("LOAD from Roboteq");
-//         //if someone sets again the request on the parameter server, prevent looping
-//         config.load_roboteq = false;
-//         // Launch encoder load
-//         getEncoderFromRoboteq();
-//         // Skip other read
-//         return;
-//     }
-
-//     // Set Encoder Usage - reference pag. 307
-//     if((_last_encoder_config.configuration != config.configuration) ||
-//             (_last_encoder_config.input_motor_one != config.input_motor_one) ||
-//             (_last_encoder_config.input_motor_two != config.input_motor_two))
-//     {
-//         int configuration = config.configuration + 16*config.input_motor_one + 32*config.input_motor_two;
-//         // Update operative mode
-//         mSerial->setParam("EMOD", std::to_string(mNumber) + " " + std::to_string(configuration));
-
-//         if(config.input_motor_one)
-//         {
-//             roboteq::Motor* motor = _motor.at(0);
-//             motor->registerSensor(this);
-//             ROS_INFO_STREAM("Register encoder [" << mNumber << "] to: " << motor->getName());
-//         }
-//         if(config.input_motor_two)
-//         {
-//             roboteq::Motor* motor = _motor.at(1);
-//             motor->registerSensor(this);
-//             ROS_INFO_STREAM("Register encoder [" << mNumber << "] to: " << motor->getName());
-//         }
-//     }
-//     // Set Encoder PPR [pag. 308]
-//     if(_last_encoder_config.PPR != config.PPR)
-//     {
-//         // Update reduction value
-//         _reduction = config.PPR;
-//         // Update operative mode
-//         mSerial->setParam("EPPR", std::to_string(mNumber) + " " + std::to_string(config.PPR));
-//     }
-//     // Set Encoder ELL - Min limit [pag. 306]
-//     if(_last_encoder_config.encoder_low_count_limit != config.encoder_low_count_limit)
-//     {
-//         // Update operative mode
-//         mSerial->setParam("ELL", std::to_string(mNumber) + " " + std::to_string(config.encoder_low_count_limit));
-//     }
-//     // Set Encoder EHL - Max limit [pag. 304]
-//     if(_last_encoder_config.encoder_high_count_limit != config.encoder_high_count_limit)
-//     {
-//         // Update operative mode
-//         mSerial->setParam("EHL", std::to_string(mNumber) + " " + std::to_string(config.encoder_high_count_limit));
-//     }
-//     // Set Encoder EHOME - Home count [pag. 306]
-//     if(_last_encoder_config.encoder_home_count != config.encoder_home_count)
-//     {
-//         // Update operative mode
-//         mSerial->setParam("EHOME", std::to_string(mNumber) + " " + std::to_string(config.encoder_home_count));
-//     }
-
-//     // Update last configuration
-//     _last_encoder_config = config;
-
-// }

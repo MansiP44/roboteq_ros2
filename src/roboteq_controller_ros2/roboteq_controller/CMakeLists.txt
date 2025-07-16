@@ -16,7 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
-find_package(roboteq_interfaces REQUIRED)
+
 find_package(rclcpp REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
@@ -37,7 +37,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../serial ${CMAKE_CURRENT_SOURCE
 
 add_library(roboteq SHARED src/roboteq.cpp src/serial_controller.cpp src/motor.cpp src/configurator/gpio_encoder.cpp src/configurator/gpio_analog.cpp src/configurator/gpio_pulse.cpp src/configurator/motor_param.cpp src/configurator/motor_pid.cpp)
 target_link_libraries(roboteq serial yaml-cpp urdfdom::urdfdom_model ${Boost_LIBRARIES})
-ament_target_dependencies(roboteq roboteq_interfaces rclcpp hardware_interface diagnostic_msgs urdf joint_limits urdfdom std_msgs pluginlib)
+ament_target_dependencies(roboteq rclcpp hardware_interface diagnostic_msgs urdf joint_limits urdfdom std_msgs pluginlib)
 
 target_compile_features(roboteq PUBLIC cxx_std_17)  # Require C99 and C++17
 target_include_directories(roboteq PUBLIC ${Boost_INCLUDE_DIRS}

@@ -31,8 +31,6 @@ namespace roboteq {
         pid_velocity = new MotorPIDConfigurator(serial, mMotorName, "velocity", number);
         pid_torque = new MotorPIDConfigurator(serial, mMotorName, "torque", number);
         pid_position = new MotorPIDConfigurator(serial, mMotorName, "position", number);
-
-        //TBD: Callback cannot be added in ROS2 hardware interface. Need to export the data through export interfaces
     }
 
     Motor::~Motor() {
@@ -159,26 +157,6 @@ namespace roboteq {
             position = boost::lexical_cast<double>(fields[8]);
             // reference command TR <-> _TR [pag. 260]
             double track = boost::lexical_cast<long>(fields[9]);
-
-            // // Build messages
-            // msg_control.header.stamp = ros::Time::now();
-            // // Fill fields
-            // msg_control.reference = (cmd / ratio_);
-            // msg_control.feedback = (vel / ratio_);
-            // msg_control.loop_error = (loop_error / ratio_);
-            // msg_control.pwm = pwm;
-            // // Publish status control motor
-            // pub_control.publish(msg_control);
-
-            // // Build control message
-            // msg_status.header.stamp = ros::Time::now();
-            // // Fill fields
-            // msg_status.volts = volts;
-            // msg_status.amps_motor = amps_motor;
-            // msg_status.amps_batt = amps_batt;
-            // msg_status.track = track;
-            // // Publish status motor
-            // pub_status.publish(msg_status);
         }
         catch (std::bad_cast& e)
         {
@@ -202,26 +180,13 @@ namespace roboteq {
         {
             effort_ = 0;
         }
-        //ROS_INFO_STREAM("[" << mNumber << "] track:" << msg_status.track);
-        //ROS_INFO_STREAM("[" << mNumber << "] volts:" << msg_status.volts << " - amps:" << msg_status.amps_motor);
-        //ROS_INFO_STREAM("[" << mNumber << "] status:" << status << " - pos:"<< position << " - vel:" << velocity << " - torque:");
-
     }
 
     void Motor::writeCommandsToHardware(double command_)
-    {
-        // Enforce joint limits for all registered handles
-        // Note: one can also enforce limits on a per-handle basis: handle.enforceLimits(period)
-        //vel_limits_interface.enforceLimits(period);
-        // Get encoder max speed parameter
-        
-        
-        // Build a command message
-        
-        std::cout<<"to rpm: "<<to_rpm(command_) <<" , max_rpm: "<<max_rpm_<<std::endl;  //to_rpm -> command_ * 9.548058
+    {   
         long long int roboteq_velocity = static_cast<long long int>(to_rpm(command_) / max_rpm_ * 1000.0);   //vel = command_ * 23.870146
         
-        RCLCPP_INFO(logger_, "Motor num: %d,  Velocity: %ld, val: %f", mNumber, roboteq_velocity, command_ );
+        //RCLCPP_INFO(logger_, "Motor num: %d,  Velocity: %ld, val: %f", mNumber, roboteq_velocity, command_ );
 
         mSerial->command("G ", std::to_string(mNumber) + " " + std::to_string(roboteq_velocity));
         RCLCPP_INFO(logger_, "G: %d,  Velocity: %ld", mNumber, roboteq_velocity);

@@ -33,9 +33,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-// #include <roboteq_control/RoboteqEncoderConfig.h>
-// #include <dynamic_reconfigure/server.h>
-
 #include "roboteq_controller/serial_controller.hpp"
 
 #include "roboteq_controller/motor.hpp"
@@ -70,8 +67,7 @@ private:
     string mName;
     /// Number motor
     unsigned int mNumber;
-    /// Private namespace
-    //ros::NodeHandle nh_;
+
     /// Serial port
     roboteq::serial_controller* mSerial;
     // List of all motors
@@ -79,19 +75,6 @@ private:
 
     // reduction value
     double _reduction;
-
-    /// Dynamic reconfigure encoder
-    // typedef dynamic_reconfigure::Server<roboteq_control::RoboteqEncoderConfig> ReconfigureServer;
-    // std::shared_ptr<ReconfigureServer> mDynRecServer;
-    // boost::recursive_mutex mDynServerMutex; // To avoid Dynamic Reconfigure Server warning
-    /**
-     * @brief reconfigureCBEncoder when the dynamic reconfigurator change some values start this method
-     * @param config variable with all configuration from dynamic reconfigurator
-     * @param level
-     */
-    //void reconfigureCBEncoder(roboteq_control::RoboteqEncoderConfig &config, uint32_t level);
-
-    //roboteq_control::RoboteqEncoderConfig default_encoder_config, _last_encoder_config;
 
     /**
      * @brief getEncoderFromRoboteq Load Encoder parameters from Roboteq board

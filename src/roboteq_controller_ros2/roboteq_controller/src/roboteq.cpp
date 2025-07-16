@@ -27,18 +27,9 @@ hardware_interface::CallbackReturn Roboteq::on_init(
     hardware_interface::SystemInterface::on_init(info) !=
     hardware_interface::CallbackReturn::SUCCESS)
   {
-    std::cout<<"Returning error from on_init"<<std::endl;
     return hardware_interface::CallbackReturn::ERROR;
   }
-
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-//   hw_start_sec_ =
-//     hardware_interface::stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-//   hw_stop_sec_ =
-//     hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
-   std::cout<<"in on_init()"<<std::endl;
+   
     std::vector<std::string> joint_names;
     for (const hardware_interface::ComponentInfo & joint : info_.joints)
     {
@@ -95,34 +86,20 @@ hardware_interface::CallbackReturn Roboteq::on_init(
       }
     }
     roboteq_params["joint"] = joint_names;
-    std::cout<<"Calling getParams()"<<std::endl;
     getParams(info_);
-    //std::cout<<""<<std::endl;
     std::any_cast<uint32_t>(roboteq_params["baud_rate"]);
     mSerial = new roboteq::serial_controller(std::any_cast<string>(roboteq_params["serial_port"]), std::any_cast<uint32_t>(roboteq_params["baud_rate"]));
-    std::cout<<"mSerial created"<<std::endl;
     mSerial->start();
 #if hardwareConnected
-    // First run dynamic reconfigurator
     setup_controller = false;
-    // Initialize GPIO reading
     _isGPIOreading = false;
-    // Load default configuration roboteq board
     this->getRoboteqInformation();
-
-    //srv_board = roboteq_node->create_service<roboteq_interfaces::srv::Service>("system", &Roboteq::service_Callback);
-
-    //motor_loop_ = false;
     _first = false;
-    
-    // Disable ECHO
+
     mSerial->echo(false);
-    // Disable Script and wait to load all parameters
     mSerial->script(false);
     // Stop motors
     bool stop_motor = mSerial->command("EX");
-
-
     RCLCPP_INFO(logger_, "Stop motor: %s", stop_motor ? "true" : "false");
 #endif
     auto joint_names_vec = std::any_cast<std::vector<std::string>>(roboteq_params["joint"]);
@@ -134,14 +111,9 @@ hardware_interface::CallbackReturn Roboteq::on_init(
     for(unsigned i=0; i < info_.joints.size(); ++i)
     {
         string motor_name = info_.joints.at(i).name;
-        std::cout<<"Casting motor num"<<std::endl;
-        std::cout << roboteq_params[motor_name+"_number"].type().name() << std::endl;
-
         int number = std::any_cast<int>(roboteq_params[motor_name+"_number"]);
-        std::cout<<"Casted motor num"<<std::endl;
         RCLCPP_INFO(logger_, "Motor[%d] name: %s", number, info_.joints[i].name.c_str());
         mMotor.push_back(new Motor(mSerial, motor_name, number, roboteq_params));
-        std::cout<<"Motor created"<<std::endl;
     }
 
     for(int i = 0; i < 6; ++i)
@@ -157,16 +129,8 @@ hardware_interface::CallbackReturn Roboteq::on_init(
         _param_encoder.push_back(new GPIOEncoderConfigurator(mSerial, mMotor, "InOut", i+1));
     }
 
-    // TBD: subscriber and publisher in the form of export iterfaces to be added. Functions that carry functionality of the subscriber callbacks need to be added. 
-  
-
     initialize();
-    //initializeInterfaces(); //not required in ros2 as the command and state interfaces are directly loaded through the hardware interface plugins. 
-    // interfaces are directly defined and exposed using the ros2_control tag in URDF. The implementation of the interfaces communicate with the hardware
-    // is provided by the C++ plugin (roboteq.cpp)  
 
-
-    //diagnostic_updater_.setHardwareID("RoboteqMotorController");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -248,14 +212,11 @@ void Roboteq::switch_off()
 void Roboteq::getRoboteqInformation()
 {
     // Load model roboeq board
-    std::cout<<"Quering roboteq"<<std::endl;
     string trn = mSerial->getQuery("TRN");
-    std::cout<<"Query done"<<std::endl;
     std::vector<std::string> fields;
     boost::split(fields, trn, boost::algorithm::is_any_of(":"));
     _type = fields[0];
     _model = fields[1];
-    // ROS_INFO_STREAM("Model " << _model);
     // Load firmware version
     _version = mSerial->getQuery("FID");
     // Load UID
@@ -296,8 +257,6 @@ void Roboteq::diagnosticCallback(diagnostic_updater::DiagnosticStatusWrapper &st
         stat.add("5V Logic Voltage (V)", _volts_five);
         stat.add("MCU Temperature (°C)", _temp_mcu);
         stat.add("Bridge Temperature (°C)", _temp_bridge);
-        //stat.add("Fault Flags", _fault);
-        //stat.add("Status Flags", _flag);
     }
     catch (const std::exception &e)
     {
@@ -391,49 +350,6 @@ void Roboteq::getControllerFromRoboteq()
     }
 }
 
-
-//service never called by any client in the original code. Hence commented
-/*void Roboteq::service_Callback(const const std::shared_ptr<roboteq_interfaces::srv::Service::Request> req,
-         std::shared_ptr<roboteq_interfaces::srv::Service::Response> msg){
-    // Convert to lower case
-    std::transform(req->service.begin(), req->service.end(), req->service.begin(), ::tolower);
-    ROS_INFO_STREAM(logger_, "Name request: " << req->service);     
-
-    if(req->service.compare("msginfo") == 0)
-    {
-        msg->information = "\nBoard type: " + _type + "\n"
-                          "Name board: " + _model + "\n"
-                          "Version: " + _version + "\n"
-                          "UID: " + _uid + "\n";
-    }
-    else if(req->service.compare("reset") == 0)
-    {
-        // Launch reset command
-        mSerial->reset();
-        // return message
-        msg->information = "System reset";
-    }
-    else if(req->service.compare("save") == 0)
-    {
-        // Launch reset command
-        mSerial->saveInEEPROM();
-        // return message
-        msg->information = "Parameters saved";
-    }
-    else
-    {
-        msg->information = "\nList of commands availabes: \n"
-                          "* info      - information about this board \n"
-                          "* reset     - " + _model + " board software reset\n"
-                          "* save      - Save all paramters in EEPROM \n"
-                          "* help      - this help.";
-    }
-    return true;
-
-
-}*/
-
-
 hardware_interface::return_type Roboteq::read(const rclcpp::Time & time, const rclcpp::Duration & period) {
   std::vector<std::string> motors[mMotor.size()];
     std::vector<std::string> fields;
@@ -521,108 +437,22 @@ hardware_interface::return_type Roboteq::read(const rclcpp::Time & time, const r
         // Read and decode vector
         mMotor[i]->readVector(motors[idx]);
     }
-
-    //Also need some kind of publisher mechanism
-    // Read data from GPIO 
-    // _isGPIOreading is false by default. Set to true if any subsciber to the topic found
-    // if(_isGPIOreading)
-    // {
-    //     msg_peripheral.header.stamp = ros::Time::now();
-    //     std::vector<std::string> fields;
-    //     // Get Pulse in status [pag. 256]
-    //     string pulse_in = mSerial->getQuery("PI");
-    //     boost::split(fields, pulse_in, boost::algorithm::is_any_of(":"));
-    //     // Clear msg list
-    //     msg_peripheral.pulse_in.clear();
-    //     for(int i = 0; i < fields.size(); ++i)
-    //     {
-    //         try
-    //         {
-    //             msg_peripheral.pulse_in.push_back(boost::lexical_cast<unsigned int>(fields[i]));
-    //         }
-    //         catch (std::bad_cast& e)
-    //         {
-    //             msg_peripheral.pulse_in.push_back(0);
-    //         }
-    //     }
-    //     // Get analog input values [pag. 231]
-    //     string analog = mSerial->getQuery("AI");
-    //     boost::split(fields, analog, boost::algorithm::is_any_of(":"));
-    //     // Clear msg list
-    //     msg_peripheral.analog.clear();
-    //     for(int i = 0; i < fields.size(); ++i)
-    //     {
-    //         try
-    //         {
-    //             msg_peripheral.analog.push_back(boost::lexical_cast<double>(fields[i]) / 1000.0);
-    //         }
-    //         catch (std::bad_cast& e)
-    //         {
-    //             msg_peripheral.analog.push_back(0);
-    //         }
-    //     }
-
-    //     // Get Digital input values [pag. 242]
-    //     string digital_in = mSerial->getQuery("DI");
-    //     boost::split(fields, digital_in, boost::algorithm::is_any_of(":"));
-    //     // Clear msg list
-    //     msg_peripheral.digital_in.clear();
-    //     for(int i = 0; i < fields.size(); ++i)
-    //     {
-    //         try
-    //         {
-    //             msg_peripheral.digital_in.push_back(boost::lexical_cast<unsigned int>(fields[i]));
-    //         }
-    //         catch (std::bad_cast& e)
-    //         {
-    //             msg_peripheral.digital_in.push_back(0);
-    //         }
-    //     }
-
-    //     string digital_out = mSerial->getQuery("DO");
-    //     unsigned int num = 0;
-    //     try
-    //     {
-    //         num = boost::lexical_cast<unsigned int>(digital_out);
-    //     }
-    //     catch (std::bad_cast& e)
-    //     {
-    //         num = 0;
-    //     }
-    //     int mask = 0x0;
-    //     // Clear msg list
-    //     msg_peripheral.digital_out.clear();
-    //     for(int i = 0; i < 8; ++i)
-    //     {
-    //         msg_peripheral.digital_out.push_back((mask & num));
-    //         mask <<= 1;
-    //     }
-
-    //     // Send GPIO status
-    //     pub_peripheral.publish(msg_peripheral);
-    // }
-
-    //diagnostic_updater_.force_update();
     return hardware_interface::return_type::OK;
 }
 hardware_interface::return_type Roboteq::write(const rclcpp::Time & time, const rclcpp::Duration & period) {
-    // Commenting for testing  
   int i = 0;
     for (vector<Motor*>::iterator it = mMotor.begin() ; it != mMotor.end(); ++it)
     {
         Motor* motor = ((Motor*)(*it));
-        // Launch initialization motors
         motor->writeCommandsToHardware(hw_command_[i]);
-        //RCLCPP_INFO(logger_, "Motor [%s] ] Send commands" << motor->getName() << "");
         i++;
     }
     return hardware_interface::return_type::OK;
 }
 hardware_interface::CallbackReturn Roboteq::on_configure(const rclcpp_lifecycle::State & previous_state) {return hardware_interface::CallbackReturn::SUCCESS;}
 hardware_interface::CallbackReturn Roboteq::on_activate(const rclcpp_lifecycle::State & previous_state) {     //functionality of doSwitch() in ros1 roboteq controller added in on_activate()
-  //diagnostic_updater_.add("Roboteq Status", this, &Roboteq::diagnosticCallback);
+
   // setting motor in run mode
-  RCLCPP_INFO(logger_, "On activate");
   for (int i = 0; i < mMotor.size(); i++)
   {
       // Stop the motor and delete the object

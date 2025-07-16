@@ -63,24 +63,9 @@ private:
     string mType;
     /// Number motor
     unsigned int mNumber;
-    /// Private namespace
-    //ros::NodeHandle nh_;
+
     /// Serial port
     roboteq::serial_controller* mSerial;
-
-    /// Dynamic reconfigure PID
-    // typedef dynamic_reconfigure::Server<roboteq_control::RoboteqPIDConfig> ReconfigureServer;
-    // std::shared_ptr<ReconfigureServer> mDynRecServer;
-    // boost::recursive_mutex mDynServerMutex; // To avoid Dynamic Reconfigure Server warning
-    /**
-     * @brief reconfigureCBEncoder when the dynamic reconfigurator change some values start this method
-     * @param config variable with all configuration from dynamic reconfigurator
-     * @param level
-     */
-    //void reconfigureCBPID(roboteq_control::RoboteqPIDConfig &config, uint32_t level);
-
-    // Default parameter config
-    //roboteq_control::RoboteqPIDConfig default_pid_config, _last_pid_config;
 
     /**
      * @brief getPIDFromRoboteq Load PID parameters from Roboteq board

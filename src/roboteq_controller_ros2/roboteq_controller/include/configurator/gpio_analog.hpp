@@ -33,9 +33,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-// #include <roboteq_control/RoboteqAnalogInputConfig.h>
-// #include <dynamic_reconfigure/server.h>
-
 #include "roboteq_controller/serial_controller.hpp"
 #include "configurator/gpio_sensor.hpp"
 #include "roboteq_controller/motor.hpp"
@@ -72,26 +69,11 @@ private:
     string mName;
     /// Number motor
     unsigned int mNumber;
-    /// Private namespace
-    //ros::NodeHandle nh_;
+
     /// Serial port
     roboteq::serial_controller* mSerial;
     // List of all motors
     std::vector<roboteq::Motor *> _motor;
-
-    /// Dynamic reconfigure analog parameters
-    // typedef dynamic_reconfigure::Server<roboteq_control::RoboteqAnalogInputConfig> ReconfigureServer;
-    // std::shared_ptr<ReconfigureServer> mDynRecServer;
-    // boost::recursive_mutex mDynServerMutex; // To avoid Dynamic Reconfigure Server warning
-    /**
-     * @brief reconfigureCBParam when the dynamic reconfigurator change some values start this method
-     * @param config variable with all configuration from dynamic reconfigurator
-     * @param level
-     */
-    // void reconfigureCBParam(roboteq_control::RoboteqAnalogInputConfig &config, uint32_t level);
-
-    // Default parameter config
-    //roboteq_control::RoboteqAnalogInputConfig default_param_config, _last_param_config;
 
     /**
      * @brief getParamFromRoboteq Load parameters from Roboteq board

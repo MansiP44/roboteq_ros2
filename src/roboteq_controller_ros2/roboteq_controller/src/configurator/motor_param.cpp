@@ -142,9 +142,6 @@ int MotorParamConfigurator::getOperativeMode()
     string str_mode = mSerial->getParam("MMOD", std::to_string(mNumber));
     // Get sign from roboteq board
     int mode = boost::lexical_cast<int>(str_mode);
-    // Set parameter
-    // nh_.setParam(mName + "/operating_mode", mode);
-
     return mode;
 }
 
